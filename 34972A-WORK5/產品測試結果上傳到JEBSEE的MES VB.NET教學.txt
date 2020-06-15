@@ -1,0 +1,83 @@
+產品測試結果上傳到JEBSEE的MES VB.NET教學
+2020/5/5 吳俊緯
+
+1. 功能表 專案>XXX 屬性>資源
+2. 名稱寫:InXmlTemplateString
+3. 值寫:
+<request>
+  <identity>
+    <transactionid>transactionidReplace</transactionid>
+    <moduleid>moduleidReplace</moduleid>
+    <functionid>functionidReplace</functionid>
+    <computername>computernameReplace</computername>
+    <curuserno>curusernoReplace</curuserno>
+    <sendtime>sendtimeReplace</sendtime>
+    <languagemode>languagemodeReplace</languagemode>
+  </identity>
+  <parameter>
+    <userno>
+      <value>usernoReplace</value>
+    </userno>
+    <equitmentno>
+  	  <value>equitmentnoReplace</value>
+    </equitmentno>
+  	<opno>
+  	  <value>opnoReplace</value>
+  	</opno>
+	<mono>
+      <value>monoReplace</value>
+    </mono>
+  	<lotno>
+  	  <value>lotnoReplace</value>
+  	</lotno>
+  	<result>
+  	  <value>resultReplace</value>
+  	</result>
+  </parameter>
+</request>
+5. 功能表 專案>加入服務參考
+6. 位址:http://172.16.9.1/ERPws_ASM_DSC/wsEQP.asmx?wsdl
+7. 按移至
+8. 空間名稱寫:ServiceReferenceMesProduction
+9. 全域變數寫:
+    'MES
+    Dim m_wsMesProduction As New ServiceReferenceMesProduction.wsEQPSoapClient
+    Dim m_strMesResult As String
+    Dim AllInXmlStr As String
+10. 函數寫:
+    Private Function mesProductionTestDBConnection() As Boolean
+        Dim responseStr As String
+        responseStr = m_wsMesProduction.TestDBConnection("iMES")
+        If responseStr = "Test successfully, UserName:IMES, DataBase is oracle !" Then
+            Return True
+        Else
+            Return False
+        End If
+    End Function
+
+    Private Function mesTestTESTUniCheckOut(usernoStr As String, curusernoStr As String, opnoStr As String, monoStr As String, lotnoStr As String, resultStr As String) As String
+        Dim InXmlStr, responseStr As String
+        InXmlStr = My.Resources.InXmlTemplateString
+        InXmlStr = Replace(InXmlStr, "transactionidReplace", Now.Millisecond.ToString)
+        InXmlStr = Replace(InXmlStr, "moduleidReplace", "請改自己模組名稱縮寫")
+        InXmlStr = Replace(InXmlStr, "functionidReplace", "mesTestTESTUniCheckOut")
+        InXmlStr = Replace(InXmlStr, "computernameReplace", My.Computer.Name)
+        InXmlStr = Replace(InXmlStr, "curusernoReplace", curusernoStr)
+        InXmlStr = Replace(InXmlStr, "sendtimeReplace", Format(Now, "yyyy-MM-dd HH:mm:ss"))
+        InXmlStr = Replace(InXmlStr, "languagemodeReplace", "zh-CHT")
+        InXmlStr = Replace(InXmlStr, "usernoReplace", usernoStr)
+        InXmlStr = Replace(InXmlStr, "equitmentnoReplace", "")
+        InXmlStr = Replace(InXmlStr, "monoReplace", monoStr)
+        InXmlStr = Replace(InXmlStr, "opnoReplace", opnoStr)
+        InXmlStr = Replace(InXmlStr, "lotnoReplace", lotnoStr)
+        InXmlStr = Replace(InXmlStr, "resultReplace", resultStr)
+        responseStr = m_wsMesProduction.wsTESTUniCheckOut(InXmlStr)
+        If InStr(responseStr, "<result>success</result>") > 0 Then
+            Return "OK"
+        Else
+            Return responseStr
+        End If
+    End Function
+11. 使用方法:
+Dim strMesResponse As String
+strMesResponse = mesTestTESTUniCheckOut("請改MES帳號", "請改客戶號碼", "請改工作站", "請改工單", "請改條碼", "請改Ng或Pass")
